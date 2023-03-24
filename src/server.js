@@ -17,10 +17,13 @@ const server = http.createServer(app);
 
 const wss = new WebSocket.Server({ server });
 
-function handelConnection(socket) {
-  console.log(socket);
-}
-
-wss.on('connection', handelConnection);
+wss.on('connection', (socket) => {
+  console.log('Connected to Browser');
+  socket.on('close', () => console.log('Disconnected from the Browser'));
+  socket.on('message', (msg) => {
+    console.log(msg.toString('utf8'));
+  });
+  socket.send('hello');
+});
 
 server.listen(3000, handleListen);
