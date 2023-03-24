@@ -1,1 +1,1 @@
-alert('js 작동 유무 확인');
+const socket = new WebSocket(`ws://${window.location.host}`);
