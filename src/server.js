@@ -42,10 +42,14 @@ io.on('connection', (socket) => {
     socket.join(roomName);
     done();
     socket.to(roomName).emit('welcome', socket.nickname); // 누군가 입장했음을 room 전체에 알린다.
+    io.sockets.emit('room_change', publicRooms());
   });
   socket.on('disconnecting', () => {
     // 방에서 나갈 경우 room 전체에 알리기
     socket.rooms.forEach((room) => socket.to(room).emit('bye', socket.nickname));
+  });
+  socket.on('disconnect', () => {
+    io.sockets.emit('room_change', publicRooms());
   });
   socket.on('new_message', (msg, room, done) => {
     socket.to(room).emit('new_message', `${socket['nickname']}: ${msg}`);
