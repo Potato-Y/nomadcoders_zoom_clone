@@ -15,19 +15,45 @@ app.get('/*', (req, res) => res.redirect('/'));
 const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
 const server = http.createServer(app);
-
 const io = SocketIO(server);
 
+function publicRooms() {
+  const {
+    sockets: {
+      adapter: { sids, rooms },
+    },
+  } = io;
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if (sids.get(key) === undefined) {
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+}
+
 io.on('connection', (socket) => {
+  socket['nickname'] = 'Anon';
   socket.onAny((event) => {
+    console.log(io.sockets.adapter);
     console.log(`Socket Event: ${event}`);
   });
   socket.on('enter_room', (roomName, done) => {
     socket.join(roomName);
     done();
-    socket.to(roomName).emit('welcome'); // 누군가 입장했음을 room 전체에 알린다.
+    socket.to(roomName).emit('welcome', socket.nickname); // 누군가 입장했음을 room 전체에 알린다.
   });
+  socket.on('disconnecting', () => {
+    // 방에서 나갈 경우 room 전체에 알리기
+    socket.rooms.forEach((room) => socket.to(room).emit('bye', socket.nickname));
+  });
+  socket.on('new_message', (msg, room, done) => {
+    socket.to(room).emit('new_message', `${socket['nickname']}: ${msg}`);
+    done();
+  });
+  socket.on('nickname', (nickname) => (socket['nickname'] = nickname));
 });
+
 /*
 const wss = new WebSocket.Server({ server });
 
