@@ -26,7 +26,6 @@ wss.on('connection', (socket) => {
   socket.on('message', (msg) => {
     sockets.forEach((aSocket) => aSocket.send(msg.toString('utf8')));
   });
-  socket.send('hello');
 });
 
 server.listen(3000, handleListen);
