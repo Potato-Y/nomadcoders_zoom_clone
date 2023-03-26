@@ -32,6 +32,10 @@ function publicRooms() {
   return publicRooms;
 }
 
+function countRoom(roomName) {
+  io.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 io.on('connection', (socket) => {
   socket['nickname'] = 'Anon';
   socket.onAny((event) => {
@@ -41,12 +45,12 @@ io.on('connection', (socket) => {
   socket.on('enter_room', (roomName, done) => {
     socket.join(roomName);
     done();
-    socket.to(roomName).emit('welcome', socket.nickname); // 누군가 입장했음을 room 전체에 알린다.
+    socket.to(roomName).emit('welcome', socket.nickname, countRoom(roomName)); // 누군가 입장했음을 room 전체에 알린다.
     io.sockets.emit('room_change', publicRooms());
   });
   socket.on('disconnecting', () => {
     // 방에서 나갈 경우 room 전체에 알리기
-    socket.rooms.forEach((room) => socket.to(room).emit('bye', socket.nickname));
+    socket.rooms.forEach((room) => socket.to(room).emit('bye', socket.nickname, countRoom(room) - 1));
   });
   socket.on('disconnect', () => {
     io.sockets.emit('room_change', publicRooms());
